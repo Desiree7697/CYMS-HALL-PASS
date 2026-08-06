@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CYMS Hall Pass</title>
+<style>
+  :root {
+    --blue: #3457d5;
+    --blue-dark: #2643b0;
+    --green: #16a34a;
+    --red: #dc2626;
+    --amber: #d97706;
+    --bg: #f4f6fb;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-light: #64748b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    background: var(--blue);
+    color: white;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-transform: uppercase;
+  }
+  .cyclone-mark {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+  }
+  nav {
+    display: flex;
+    gap: 4px;
+    background: rgba(255,255,255,0.15);
+    padding: 4px;
+    border-radius: 10px;
+  }
+  nav button {
+    border: none;
+    background: transparent;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    opacity: 0.8;
+  }
+  nav button.active {
+    background: white;
+    color: var(--blue-dark);
+    opacity: 1;
+  }
+  nav button.staff-only { display: none; }
+  body.staff-unlocked nav button.staff-only { display: inline-block; }
+  #staff-toggle {
+    border: 1px solid rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.1);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #staff-toggle:hover { background: rgba(255,255,255,0.2); }
+  #staff-toggle svg { width: 14px; height: 14px; }
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  .view { display: none; }
+  .view.active { display: block; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .card h2 {
+    margin-top: 0;
+    font-size: 16px;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .student-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  .student-btn {
+    padding: 16px 10px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: white;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .student-btn:hover { border-color: var(--blue); }
+  .student-btn.out {
+    background: var(--blue);
+    border-color: var(--blue-dark);
+    color: white;
+  }
+  .student-btn.out .sub { display: block; font-size: 11px; font-weight: 500; margin-top: 4px; color: white; }
+  .student-btn .sub { display: none; }
+  .student-btn.out .big-timer {
+    display: block; font-size: 22px; font-weight: 800; margin-top: 6px;
+    font-variant-numeric: tabular-nums; color: white;
+  }
+  .student-btn.out.late { background: var(--red); border-color: #991b1b; color: white; }
+  .student-btn.out.late .sub, .student-btn.out.late .big-timer { color: white; }
+
+  .summary-row { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat {
+    flex: 1;
+    min-width: 140px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 20px;
+  }
+  .stat .num { font-size: 28px; font-weight: 800; }
+  .stat .label { font-size: 12px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.04em; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  th { color: var(--text-light); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+  tr:last-child td { border-bottom: none; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .badge.ok { background: #dcfce7; color: #166534; }
+  .badge.warn { background: #fee2e2; color: #991b1b; }
+
+  .timer { font-variant-numeric: tabular-nums; font-weight: 700; }
+  .timer.late { color: var(--red); }
+
+  .btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    background: var(--blue);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .btn.secondary { background: #e2e8f0; color: var(--text); }
+  .btn.danger { background: var(--red); }
+  .btn:hover { opacity: 0.9; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(15,23,42,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 50;
+  }
+  .modal {
+    background: white; border-radius: 16px; padding: 24px;
+    width: 90%; max-width: 380px;
+  }
+  .modal h3 { margin-top: 0; }
+  .dest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+  .dest-btn {
+    padding: 14px; border-radius: 10px; border: 2px solid var(--border);
+    background: white; cursor: pointer; font-weight: 600; font-size: 14px;
+  }
+  .dest-btn.selected { border-color: var(--blue); background: #eff6ff; color: var(--blue-dark); }
+  .dest-btn.occupied {
+    background: #f1f5f9; color: var(--text-light); cursor: not-allowed;
+    border-color: var(--border);
+  }
+  .dest-btn.occupied .occupant { display: block; font-size: 11px; font-weight: 500; margin-top: 3px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .pin-sub { font-size: 13px; color: var(--text-light); margin-top: -8px; }
+  .pin-dots { display: flex; gap: 16px; justify-content: center; margin: 18px 0; }
+  .pin-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid var(--border); background: white; transition: all 0.1s;
+  }
+  .pin-dot.filled { background: var(--blue); border-color: var(--blue); }
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0; }
+  .keypad button {
+    padding: 18px 0; font-size: 22px; font-weight: 700; border-radius: 12px;
+    border: 2px solid var(--border); background: white; cursor: pointer; color: var(--text);
+  }
+  .keypad button:active { background: #eff6ff; border-color: var(--blue); }
+  .keypad button.key-action { font-size: 13px; font-weight: 600; color: var(--text-light); }
+  .warning-box {
+    background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
+    padding: 12px; border-radius: 10px; font-size: 13px; margin-top: 10px;
+  }
+
+  .settings-section { margin-bottom: 24px; }
+  .settings-section h3 { font-size: 14px; margin-bottom: 10px; }
+  .roster-row, .pair-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 14px;
+  }
+  .roster-row:last-child, .pair-row:last-child { border-bottom: none; }
+  input[type=text], input[type=number], select {
+    padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+    font-size: 14px; width: 100%;
+  }
+  .inline-form { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .inline-form > * { flex: 1; min-width: 120px; }
+  .empty { color: var(--text-light); font-size: 13px; padding: 12px 0; }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: white; padding: 10px 20px; border-radius: 10px;
+    font-size: 14px; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>
+    <svg class="cyclone-mark" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8,14 Q30,4 50,14 Q70,24 92,14" stroke="white" stroke-width="8" stroke-linecap="round"/>
+      <path d="M18,30 Q35,22 50,30 Q65,38 82,30" stroke="white" stroke-width="7" stroke-linecap="round"/>
+      <path d="M28,46 Q40,40 50,46 Q60,52 72,46" stroke="white" stroke-width="6" stroke-linecap="round"/>
+      <path d="M36,62 Q44,58 50,62 Q56,66 64,62" stroke="white" stroke-width="5" stroke-linecap="round"/>
+      <path d="M42,78 Q46,76 50,78 Q54,80 58,78" stroke="white" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    CYMS Hall Pass
+  </h1>
+  <nav>
+    <button data-view="kiosk" class="active">Kiosk</button>
+    <button data-view="dashboard" class="staff-only">Teacher Dashboard</button>
+    <button data-view="settings" class="staff-only">Settings</button>
+  </nav>
+  <button id="staff-toggle" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+    <span id="staff-toggle-label">Staff</span>
+  </button>
+</header>
+
+<main>
+
+  <!-- KIOSK VIEW -->
+  <div id="view-kiosk" class="view active">
+    <div class="card" id="period-select-card">
+      <h2>Select your class period</h2>
+      <div id="period-grid" class="student-grid"></div>
+    </div>
+    <div class="card" id="roster-card" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+        <h2 style="margin:0;" id="roster-period-label">Tap your name</h2>
+        <button class="btn secondary" id="change-period-btn">Change period</button>
+      </div>
+      <div id="kiosk-grid" class="student-grid"></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD VIEW -->
+  <div id="view-dashboard" class="view">
+    <div class="summary-row">
+      <div class="stat"><div class="num" id="stat-out">0</div><div class="label">Out right now</div></div>
+      <div class="stat"><div class="num" id="stat-today">0</div><div class="label">Passes today</div></div>
+      <div class="stat"><div class="num" id="stat-avg">0m</div><div class="label">Avg. length today</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Currently out</h2>
+      <table id="active-table">
+        <thead><tr><th>Student</th><th>Period</th><th>Destination</th><th>Time out</th><th>Status</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div id="active-empty" class="empty">Nobody is out right now.</div>
+    </div>
+
+    <div class="card">
+      <h2>Frequent flyer report (this week)</h2>
+      <table>
+        <thead><tr><th>Student</th><th># Passes</th><th>Total time out</th></tr></thead>
+        <tbody id="frequent-table"></tbody>
+      </table>
+      <div id="frequent-empty" class="empty">No passes logged yet.</div>
+    </div>
+  </div>
+
+  <!-- SETTINGS VIEW -->
+  <div id="view-settings" class="view">
+    <div class="card">
+      <div class="settings-section">
+        <h3>Pass timer threshold</h3>
+        <p style="font-size:13px;color:var(--text-light);margin-top:-6px;">Timer turns red after this many minutes.</p>
+        <div class="inline-form">
+          <input type="number" id="threshold-input" min="1" max="60" value="15">
+          <button class="btn" id="save-threshold">Save</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Student PIN</h3>
+        <p style="font-size:13px;color:var(--text-light);margin-top:-6px;">Require each student to enter their own PIN before checking in or out. Turn this on if kids start tapping each other's names.</p>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;cursor:pointer;">
+          <input type="checkbox" id="require-pin-toggle" style="width:18px;height:18px;">
+          Require student PIN
+        </label>
+      </div>
+
+      <div class="settings-section">
+        <h3>Staff PIN</h3>
+        <p style="font-size:13px;color:var(--text-light);margin-top:-6px;">Required to open the Teacher Dashboard and Settings from the kiosk.</p>
+        <div class="inline-form">
+          <input type="text" id="pin-input" maxlength="8" placeholder="e.g. 1234">
+          <button class="btn" id="save-pin">Save</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Class periods</h3>
+        <p style="font-size:13px;color:var(--text-light);margin-top:-6px;">These show up as the first screen on the kiosk. Rename, retime, or add periods to match your school's schedule.</p>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px;">
+          <input type="checkbox" id="auto-schedule-toggle" style="width:18px;height:18px;">
+          Automatically switch periods by start time
+        </label>
+        <div id="periods-list"></div>
+        <div class="inline-form">
+          <input type="text" id="new-period-name" placeholder="e.g. Period 7">
+          <input type="time" id="new-period-time" style="max-width:140px;">
+          <button class="btn" id="add-period">Add period</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Roster</h3>
+        <p style="font-size:13px;color:var(--text-light);margin-top:-6px;">Each student's 2-digit PIN protects them from someone else tapping their name on the kiosk. Assign each student to a class period so they show up on the right kiosk screen.</p>
+        <div id="roster-list"></div>
+        <div class="inline-form">
+          <input type="text" id="new-student-name" placeholder="Student name">
+          <select id="new-student-period"></select>
+          <input type="text" id="new-student-pin" maxlength="2" inputmode="numeric" placeholder="PIN (2 digits)" style="max-width:140px;">
+          <button class="btn" id="add-student">Add student</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Restricted pairs</h3>
+        <p style="font-size:13px;color:var(--text-light);margin-top:-6px;">These students can't be out at the same time.</p>
+        <div id="pairs-list"></div>
+        <div class="inline-form">
+          <select id="pair-student-a"></select>
+          <select id="pair-student-b"></select>
+          <button class="btn" id="add-pair">Add restriction</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  const STORAGE_KEY = 'hallpass_prototype_v1';
+
+  const defaultState = {
+    threshold: 15, // minutes
+    staffPin: '1234',
+    requireStudentPin: true,
+    autoSchedule: true,
+    periods: [
+      { id: 'per1', name: 'Period 1', startTime: '08:00' },
+      { id: 'per2', name: 'Period 2', startTime: '08:50' },
+      { id: 'per3', name: 'Period 3', startTime: '09:40' },
+      { id: 'per4', name: 'Period 4', startTime: '10:30' },
+      { id: 'per5', name: 'Period 5', startTime: '11:20' },
+      { id: 'per6', name: 'Period 6', startTime: '12:10' }
+    ],
+    students: [
+      { id: 's1', name: 'Ava Chen', pin: '14', period: 'per1' },
+      { id: 's2', name: 'Marcus Lee', pin: '27', period: 'per1' },
+      { id: 's3', name: 'Sofia Ramirez', pin: '38', period: 'per2' },
+      { id: 's4', name: 'Ethan Brooks', pin: '45', period: 'per2' },
+      { id: 's5', name: 'Priya Patel', pin: '59', period: 'per3' },
+      { id: 's6', name: 'Jayden Wright', pin: '63', period: 'per3' },
+      { id: 's7', name: 'Lily Nguyen', pin: '72', period: 'per4' },
+      { id: 's8', name: 'Noah Davis', pin: '81', period: 'per4' }
+    ],
+    restrictedPairs: [ ['s2','s6'] ],
+    passes: [] // { id, studentId, destination, start, end }
+  };
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const merged = Object.assign({}, defaultState, JSON.parse(raw));
+        const fallbackPeriod = merged.periods[0] ? merged.periods[0].id : null;
+        merged.students = (merged.students || []).map(s => s.period ? s : Object.assign({}, s, { period: fallbackPeriod }));
+        return merged;
+      }
+    } catch (e) {}
+    return JSON.parse(JSON.stringify(defaultState));
+  }
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  let state = loadState();
+
+  const DESTINATIONS = ['Bathroom', 'Nurse', 'Office', 'Locker', 'Water Fountain', 'Other'];
+
+  // ---------- Utility ----------
+  function studentName(id) {
+    const s = state.students.find(st => st.id === id);
+    return s ? s.name : 'Unknown';
+  }
+  function studentPeriodName(studentId) {
+    const s = state.students.find(st => st.id === studentId);
+    if (!s || !s.period) return '—';
+    const p = state.periods.find(pd => pd.id === s.period);
+    return p ? p.name : '—';
+  }
+  function activePassFor(studentId) {
+    return state.passes.find(p => p.studentId === studentId && !p.end);
+  }
+  function isRestrictedPairOut(studentId) {
+    for (const [a, b] of state.restrictedPairs) {
+      if (a === studentId && activePassFor(b)) return studentName(b);
+      if (b === studentId && activePassFor(a)) return studentName(a);
+    }
+    return null;
+  }
+  function destinationOccupant(destination) {
+    const pass = state.passes.find(p => !p.end && p.destination === destination);
+    return pass ? studentName(pass.studentId) : null;
+  }
+  function formatElapsed(ms) {
+    const totalSec = Math.floor(ms / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+  function isSameDay(ts, ref) {
+    const d1 = new Date(ts), d2 = new Date(ref);
+    return d1.toDateString() === d2.toDateString();
+  }
+  function isThisWeek(ts, ref) {
+    const d = new Date(ts);
+    const r = new Date(ref);
+    const startOfWeek = new Date(r);
+    startOfWeek.setDate(r.getDate() - r.getDay());
+    startOfWeek.setHours(0,0,0,0);
+    return d >= startOfWeek;
+  }
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ---------- Navigation ----------
+  document.querySelectorAll('nav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('view-' + btn.dataset.view).classList.add('active');
+      if (btn.dataset.view === 'settings') renderSettings();
+    });
+  });
+
+  // ---------- Staff access ----------
+  function goToKioskView() {
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelector('nav button[data-view="kiosk"]').classList.add('active');
+    document.getElementById('view-kiosk').classList.add('active');
+  }
+
+  function updateStaffToggleLabel() {
+    document.getElementById('staff-toggle-label').textContent =
+      document.body.classList.contains('staff-unlocked') ? 'Exit staff mode' : 'Staff';
+  }
+
+  function openStaffPinModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <h3>Staff access</h3>
+        <div class="inline-form" style="margin-top:0;">
+          <input type="password" id="staff-pin-entry" placeholder="Enter PIN" inputmode="numeric">
+        </div>
+        <div class="modal-actions" style="margin-top:16px;">
+          <button class="btn secondary" id="cancel-pin">Cancel</button>
+          <button class="btn" id="confirm-pin">Unlock</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const input = overlay.querySelector('#staff-pin-entry');
+    input.focus();
+
+    function tryUnlock() {
+      if (input.value === state.staffPin) {
+        document.body.classList.add('staff-unlocked');
+        updateStaffToggleLabel();
+        overlay.remove();
+        showToast('Staff access unlocked.');
+      } else {
+        showToast('Incorrect PIN.');
+        input.value = '';
+        input.focus();
+      }
+    }
+    overlay.querySelector('#confirm-pin').addEventListener('click', tryUnlock);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+    overlay.querySelector('#cancel-pin').addEventListener('click', () => overlay.remove());
+  }
+
+  document.getElementById('staff-toggle').addEventListener('click', () => {
+    if (document.body.classList.contains('staff-unlocked')) {
+      document.body.classList.remove('staff-unlocked');
+      updateStaffToggleLabel();
+      goToKioskView();
+    } else {
+      openStaffPinModal();
+    }
+  });
+
+  // ---------- Kiosk ----------
+  let pendingSignOutStudent = null;
+  let selectedDestination = null;
+  let currentPeriodId = null;
+
+  function renderPeriodGrid() {
+    const grid = document.getElementById('period-grid');
+    grid.innerHTML = '';
+    if (!state.periods.length) {
+      grid.innerHTML = '<div class="empty">No class periods set up yet. Add one in Settings.</div>';
+      return;
+    }
+    const scheduledId = getScheduledPeriodId();
+    state.periods.forEach(p => {
+      const btn = document.createElement('button');
+      btn.className = 'student-btn';
+      btn.innerHTML = p.id === scheduledId ? `${p.name}<span class="sub">Now</span>` : p.name;
+      btn.addEventListener('click', () => selectPeriod(p.id));
+      grid.appendChild(btn);
+    });
+  }
+
+  function selectPeriod(periodId) {
+    currentPeriodId = periodId;
+    document.getElementById('period-select-card').style.display = 'none';
+    document.getElementById('roster-card').style.display = 'block';
+    const period = state.periods.find(p => p.id === periodId);
+    document.getElementById('roster-period-label').textContent = period ? period.name : 'Tap your name';
+    renderKiosk();
+  }
+
+  document.getElementById('change-period-btn').addEventListener('click', () => {
+    currentPeriodId = null;
+    document.getElementById('roster-card').style.display = 'none';
+    document.getElementById('period-select-card').style.display = 'block';
+    renderPeriodGrid();
+  });
+
+  // ---------- Schedule ----------
+  function getScheduledPeriodId() {
+    const now = new Date();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    let bestId = null;
+    let bestMinutes = -1;
+    state.periods.forEach(p => {
+      if (!p.startTime) return;
+      const [h, m] = p.startTime.split(':').map(Number);
+      const startMinutes = h * 60 + m;
+      if (startMinutes <= nowMinutes && startMinutes > bestMinutes) {
+        bestMinutes = startMinutes;
+        bestId = p.id;
+      }
+    });
+    return bestId;
+  }
+
+  function checkSchedule() {
+    if (!state.autoSchedule) return;
+    const scheduledId = getScheduledPeriodId();
+    if (scheduledId && scheduledId !== currentPeriodId) {
+      selectPeriod(scheduledId);
+    }
+    if (document.getElementById('period-select-card').style.display !== 'none') {
+      renderPeriodGrid();
+    }
+  }
+
+  function renderKiosk() {
+    if (!currentPeriodId) return;
+    const grid = document.getElementById('kiosk-grid');
+    const now = Date.now();
+    const thresholdMs = state.threshold * 60 * 1000;
+    grid.innerHTML = '';
+    const periodStudents = state.students.filter(s => s.period === currentPeriodId);
+    if (!periodStudents.length) {
+      grid.innerHTML = '<div class="empty">No students assigned to this period yet.</div>';
+      return;
+    }
+    periodStudents.forEach(s => {
+      const pass = activePassFor(s.id);
+      const btn = document.createElement('button');
+      if (pass) {
+        const elapsed = now - pass.start;
+        const late = elapsed > thresholdMs;
+        btn.className = 'student-btn out' + (late ? ' late' : '');
+        btn.innerHTML = `${s.name}<span class="sub">Out · ${pass.destination}</span><span class="big-timer">${formatElapsed(elapsed)}</span><span class="sub">Tap to sign in</span>`;
+      } else {
+        btn.className = 'student-btn';
+        btn.textContent = s.name;
+      }
+      btn.addEventListener('click', () => onStudentTap(s));
+      grid.appendChild(btn);
+    });
+  }
+
+  function onStudentTap(student) {
+    const proceed = () => {
+      const pass = activePassFor(student.id);
+      if (pass) {
+        pass.end = Date.now();
+        saveState();
+        showToast(`${student.name} signed back in.`);
+        renderKiosk();
+        return;
+      }
+      const blocker = isRestrictedPairOut(student.id);
+      pendingSignOutStudent = student;
+      selectedDestination = null;
+      openDestinationModal(student, blocker);
+    };
+    if (state.requireStudentPin) {
+      openStudentPinModal(student, proceed);
+    } else {
+      proceed();
+    }
+  }
+
+  function openStudentPinModal(student, onSuccess) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <h3>${student.name}</h3>
+        <p class="pin-sub">Enter your 2-digit PIN</p>
+        <div class="pin-dots" id="pin-dots">
+          <span class="pin-dot" data-i="0"></span>
+          <span class="pin-dot" data-i="1"></span>
+        </div>
+        <div class="keypad" id="keypad">
+          <button data-key="1">1</button>
+          <button data-key="2">2</button>
+          <button data-key="3">3</button>
+          <button data-key="4">4</button>
+          <button data-key="5">5</button>
+          <button data-key="6">6</button>
+          <button data-key="7">7</button>
+          <button data-key="8">8</button>
+          <button data-key="9">9</button>
+          <button class="key-action" data-key="clear">Clear</button>
+          <button data-key="0">0</button>
+          <button class="key-action" data-key="back">Back</button>
+        </div>
+        <div class="modal-actions">
+          <button class="btn secondary" id="cancel-student-pin">Cancel</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    let entered = '';
+    const dots = overlay.querySelectorAll('.pin-dot');
+
+    function updateDots() {
+      dots.forEach((dot, i) => dot.classList.toggle('filled', i < entered.length));
+    }
+
+    function tryPin() {
+      if (entered === student.pin) {
+        overlay.remove();
+        onSuccess();
+      } else {
+        showToast('Incorrect PIN.');
+        entered = '';
+        updateDots();
+      }
+    }
+
+    overlay.querySelector('#keypad').addEventListener('click', e => {
+      const btn = e.target.closest('button[data-key]');
+      if (!btn) return;
+      const key = btn.dataset.key;
+      if (key === 'clear') {
+        entered = '';
+        updateDots();
+      } else if (key === 'back') {
+        entered = entered.slice(0, -1);
+        updateDots();
+      } else if (entered.length < 2) {
+        entered += key;
+        updateDots();
+        if (entered.length === 2) setTimeout(tryPin, 150);
+      }
+    });
+
+    overlay.querySelector('#cancel-student-pin').addEventListener('click', () => overlay.remove());
+  }
+
+  function openDestinationModal(student, blocker) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <h3>${student.name} — where to?</h3>
+        <div class="dest-grid" id="dest-grid"></div>
+        ${blocker ? `<div class="warning-box">${blocker} is already out. Only one of you can be out at a time.</div>` : ''}
+        <div class="modal-actions">
+          <button class="btn secondary" id="cancel-modal">Cancel</button>
+          <button class="btn" id="confirm-modal" ${blocker ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>Sign out</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    const destGrid = overlay.querySelector('#dest-grid');
+    DESTINATIONS.forEach(d => {
+      const occupant = destinationOccupant(d);
+      const b = document.createElement('button');
+      b.className = 'dest-btn' + (occupant ? ' occupied' : '');
+      b.innerHTML = occupant ? `${d}<span class="occupant">${occupant} is there</span>` : d;
+      if (occupant) {
+        b.disabled = true;
+      } else {
+        b.addEventListener('click', () => {
+          selectedDestination = d;
+          overlay.querySelectorAll('.dest-btn').forEach(x => x.classList.remove('selected'));
+          b.classList.add('selected');
+        });
+      }
+      destGrid.appendChild(b);
+    });
+
+    overlay.querySelector('#cancel-modal').addEventListener('click', () => overlay.remove());
+    overlay.querySelector('#confirm-modal').addEventListener('click', () => {
+      if (!selectedDestination) { showToast('Pick a destination first.'); return; }
+      if (destinationOccupant(selectedDestination)) { showToast('Someone just took that spot — pick another.'); return; }
+      state.passes.push({
+        id: 'p' + Date.now(),
+        studentId: student.id,
+        destination: selectedDestination,
+        start: Date.now(),
+        end: null
+      });
+      saveState();
+      showToast(`${student.name} signed out — ${selectedDestination}.`);
+      overlay.remove();
+      renderKiosk();
+    });
+  }
+
+  // ---------- Dashboard ----------
+  function renderDashboard() {
+    const now = Date.now();
+    const thresholdMs = state.threshold * 60 * 1000;
+    const active = state.passes.filter(p => !p.end);
+
+    document.getElementById('stat-out').textContent = active.length;
+
+    const todaysPasses = state.passes.filter(p => isSameDay(p.start, now));
+    document.getElementById('stat-today').textContent = todaysPasses.length;
+
+    const completedToday = todaysPasses.filter(p => p.end);
+    const avgMs = completedToday.length
+      ? completedToday.reduce((sum, p) => sum + (p.end - p.start), 0) / completedToday.length
+      : 0;
+    document.getElementById('stat-avg').textContent = avgMs ? Math.round(avgMs / 60000) + 'm' : '0m';
+
+    const tbody = document.querySelector('#active-table tbody');
+    tbody.innerHTML = '';
+    document.getElementById('active-empty').style.display = active.length ? 'none' : 'block';
+    document.getElementById('active-table').style.display = active.length ? 'table' : 'none';
+
+    active.sort((a,b) => a.start - b.start).forEach(p => {
+      const elapsed = now - p.start;
+      const late = elapsed > thresholdMs;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${studentName(p.studentId)}</td>
+        <td>${studentPeriodName(p.studentId)}</td>
+        <td>${p.destination}</td>
+        <td class="timer ${late ? 'late' : ''}">${formatElapsed(elapsed)}</td>
+        <td><span class="badge ${late ? 'warn' : 'ok'}">${late ? 'Over limit' : 'On time'}</span></td>
+        <td><button class="btn secondary" data-signin="${p.id}">Sign in</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll('[data-signin]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pass = state.passes.find(p => p.id === btn.dataset.signin);
+        if (pass) { pass.end = Date.now(); saveState(); renderDashboard(); renderKiosk(); }
+      });
+    });
+
+    // Frequent flyer report (this week)
+    const weekPasses = state.passes.filter(p => isThisWeek(p.start, now));
+    const byStudent = {};
+    weekPasses.forEach(p => {
+      if (!byStudent[p.studentId]) byStudent[p.studentId] = { count: 0, totalMs: 0 };
+      byStudent[p.studentId].count++;
+      byStudent[p.studentId].totalMs += (p.end || now) - p.start;
+    });
+    const rows = Object.entries(byStudent).sort((a,b) => b[1].count - a[1].count);
+
+    const freqBody = document.getElementById('frequent-table');
+    freqBody.innerHTML = '';
+    document.getElementById('frequent-empty').style.display = rows.length ? 'none' : 'block';
+    rows.forEach(([studentId, data]) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${studentName(studentId)}</td><td>${data.count}</td><td>${Math.round(data.totalMs/60000)}m</td>`;
+      freqBody.appendChild(tr);
+    });
+  }
+
+  // ---------- Settings ----------
+  function renderSettings() {
+    document.getElementById('threshold-input').value = state.threshold;
+    document.getElementById('pin-input').value = state.staffPin;
+    document.getElementById('require-pin-toggle').checked = state.requireStudentPin;
+    document.getElementById('auto-schedule-toggle').checked = state.autoSchedule;
+
+    const periodsList = document.getElementById('periods-list');
+    periodsList.innerHTML = '';
+    if (!state.periods.length) periodsList.innerHTML = '<div class="empty">No class periods yet.</div>';
+    state.periods.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'roster-row';
+      row.innerHTML = `
+        <input type="text" value="${p.name}" data-period-name-for="${p.id}" style="max-width:180px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="time" value="${p.startTime || ''}" data-period-time-for="${p.id}">
+          <button class="btn danger" data-remove-period="${p.id}">Remove</button>
+        </div>`;
+      periodsList.appendChild(row);
+    });
+    periodsList.querySelectorAll('[data-period-name-for]').forEach(input => {
+      input.addEventListener('change', () => {
+        const val = input.value.trim();
+        if (!val) { showToast('Period name can\'t be empty.'); renderSettings(); return; }
+        const period = state.periods.find(p => p.id === input.dataset.periodNameFor);
+        if (period) { period.name = val; saveState(); renderSettings(); renderPeriodGrid(); showToast('Period renamed.'); }
+      });
+    });
+    periodsList.querySelectorAll('[data-period-time-for]').forEach(input => {
+      input.addEventListener('change', () => {
+        const period = state.periods.find(p => p.id === input.dataset.periodTimeFor);
+        if (period) { period.startTime = input.value; saveState(); renderPeriodGrid(); showToast(`${period.name} start time updated.`); }
+      });
+    });
+    periodsList.querySelectorAll('[data-remove-period]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.removePeriod;
+        state.periods = state.periods.filter(p => p.id !== id);
+        saveState();
+        renderSettings();
+        renderPeriodGrid();
+        showToast('Period removed. Reassign any students who were in it.');
+      });
+    });
+
+    const newStudentPeriodSelect = document.getElementById('new-student-period');
+    newStudentPeriodSelect.innerHTML = state.periods.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
+    const rosterList = document.getElementById('roster-list');
+    rosterList.innerHTML = '';
+    if (!state.students.length) rosterList.innerHTML = '<div class="empty">No students yet.</div>';
+    state.students.forEach(s => {
+      const row = document.createElement('div');
+      row.className = 'roster-row';
+      const periodOptions = state.periods.map(p => `<option value="${p.id}" ${p.id === s.period ? 'selected' : ''}>${p.name}</option>`).join('');
+      row.innerHTML = `
+        <span>${s.name}</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <select data-period-for="${s.id}" style="width:auto;">${periodOptions}</select>
+          <input type="text" maxlength="2" inputmode="numeric" value="${s.pin || ''}" data-pin-for="${s.id}" style="width:56px;text-align:center;">
+          <button class="btn danger" data-remove-student="${s.id}">Remove</button>
+        </div>`;
+      rosterList.appendChild(row);
+    });
+    rosterList.querySelectorAll('[data-remove-student]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.removeStudent;
+        state.students = state.students.filter(s => s.id !== id);
+        state.restrictedPairs = state.restrictedPairs.filter(([a,b]) => a !== id && b !== id);
+        saveState();
+        renderSettings();
+        renderKiosk();
+      });
+    });
+    rosterList.querySelectorAll('[data-pin-for]').forEach(input => {
+      input.addEventListener('change', () => {
+        const val = input.value.trim();
+        if (!/^\d{2}$/.test(val)) { showToast('PIN must be exactly 2 digits.'); renderSettings(); return; }
+        const student = state.students.find(s => s.id === input.dataset.pinFor);
+        if (student) { student.pin = val; saveState(); showToast(`${student.name}'s PIN updated.`); }
+      });
+    });
+    rosterList.querySelectorAll('[data-period-for]').forEach(select => {
+      select.addEventListener('change', () => {
+        const student = state.students.find(s => s.id === select.dataset.periodFor);
+        if (student) { student.period = select.value; saveState(); renderKiosk(); showToast(`${student.name} moved to ${studentPeriodName(student.id)}.`); }
+      });
+    });
+
+    const pairsList = document.getElementById('pairs-list');
+    pairsList.innerHTML = '';
+    if (!state.restrictedPairs.length) pairsList.innerHTML = '<div class="empty">No restricted pairs.</div>';
+    state.restrictedPairs.forEach(([a,b], idx) => {
+      const row = document.createElement('div');
+      row.className = 'pair-row';
+      row.innerHTML = `<span>${studentName(a)} + ${studentName(b)}</span><button class="btn danger" data-remove-pair="${idx}">Remove</button>`;
+      pairsList.appendChild(row);
+    });
+    pairsList.querySelectorAll('[data-remove-pair]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.restrictedPairs.splice(Number(btn.dataset.removePair), 1);
+        saveState();
+        renderSettings();
+      });
+    });
+
+    const selA = document.getElementById('pair-student-a');
+    const selB = document.getElementById('pair-student-b');
+    selA.innerHTML = state.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    selB.innerHTML = state.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  }
+
+  document.getElementById('save-threshold').addEventListener('click', () => {
+    const val = parseInt(document.getElementById('threshold-input').value, 10);
+    if (val > 0) { state.threshold = val; saveState(); showToast('Threshold updated.'); }
+  });
+
+  document.getElementById('save-pin').addEventListener('click', () => {
+    const val = document.getElementById('pin-input').value.trim();
+    if (val) { state.staffPin = val; saveState(); showToast('Staff PIN updated.'); }
+  });
+
+  document.getElementById('require-pin-toggle').addEventListener('change', e => {
+    state.requireStudentPin = e.target.checked;
+    saveState();
+    showToast(state.requireStudentPin ? 'Student PIN required.' : 'Student PIN turned off.');
+  });
+
+  document.getElementById('auto-schedule-toggle').addEventListener('change', e => {
+    state.autoSchedule = e.target.checked;
+    saveState();
+    renderPeriodGrid();
+    showToast(state.autoSchedule ? 'Periods will switch automatically by start time.' : 'Automatic switching turned off.');
+  });
+
+  function randomUnusedPin() {
+    const used = new Set(state.students.map(s => s.pin));
+    let pin;
+    do { pin = String(Math.floor(Math.random() * 100)).padStart(2, '0'); } while (used.has(pin));
+    return pin;
+  }
+
+  document.getElementById('add-student').addEventListener('click', () => {
+    const nameInput = document.getElementById('new-student-name');
+    const pinInput = document.getElementById('new-student-pin');
+    const periodSelect = document.getElementById('new-student-period');
+    const name = nameInput.value.trim();
+    if (!name) return;
+    if (!periodSelect.value) { showToast('Add a class period first.'); return; }
+    let pin = pinInput.value.trim();
+    if (pin && !/^\d{2}$/.test(pin)) { showToast('PIN must be exactly 2 digits.'); return; }
+    if (!pin) pin = randomUnusedPin();
+    state.students.push({ id: 's' + Date.now(), name, pin, period: periodSelect.value });
+    nameInput.value = '';
+    pinInput.value = '';
+    saveState();
+    renderSettings();
+    renderKiosk();
+    showToast(`${name} added with PIN ${pin}.`);
+  });
+
+  document.getElementById('add-period').addEventListener('click', () => {
+    const nameInput = document.getElementById('new-period-name');
+    const timeInput = document.getElementById('new-period-time');
+    const name = nameInput.value.trim();
+    if (!name) return;
+    state.periods.push({ id: 'per' + Date.now(), name, startTime: timeInput.value || '' });
+    nameInput.value = '';
+    timeInput.value = '';
+    saveState();
+    renderSettings();
+    renderPeriodGrid();
+  });
+
+  document.getElementById('add-pair').addEventListener('click', () => {
+    const a = document.getElementById('pair-student-a').value;
+    const b = document.getElementById('pair-student-b').value;
+    if (!a || !b || a === b) { showToast('Pick two different students.'); return; }
+    const exists = state.restrictedPairs.some(([x,y]) => (x===a&&y===b)||(x===b&&y===a));
+    if (exists) { showToast('That pair is already restricted.'); return; }
+    state.restrictedPairs.push([a,b]);
+    saveState();
+    renderSettings();
+  });
+
+  // ---------- Init ----------
+  renderPeriodGrid();
+  renderDashboard();
+  renderSettings();
+  checkSchedule();
+  setInterval(renderDashboard, 1000);
+  setInterval(renderKiosk, 1000);
+  setInterval(checkSchedule, 30000);
+</script>
+
+</body>
+</html>
