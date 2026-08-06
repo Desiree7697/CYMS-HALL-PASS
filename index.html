@@ -18,11 +18,16 @@
     --text-light: #64748b;
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
   }
   header {
     background: var(--blue);
@@ -33,6 +38,7 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 12px;
+    flex: 0 0 auto;
   }
   header h1 {
     margin: 0;
@@ -74,7 +80,7 @@
   }
   nav button.staff-only { display: none; }
   body.staff-unlocked nav button.staff-only { display: inline-block; }
-  #staff-toggle {
+  .header-btn, #staff-toggle {
     border: 1px solid rgba(255,255,255,0.4);
     background: rgba(255,255,255,0.1);
     color: white;
@@ -87,21 +93,37 @@
     align-items: center;
     gap: 6px;
   }
-  #staff-toggle:hover { background: rgba(255,255,255,0.2); }
-  #staff-toggle svg { width: 14px; height: 14px; }
+  .header-btn:hover, #staff-toggle:hover { background: rgba(255,255,255,0.2); }
+  .header-btn svg, #staff-toggle svg { width: 14px; height: 14px; }
+  .header-actions { display: flex; align-items: center; gap: 8px; }
   main {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
     max-width: 1100px;
     margin: 0 auto;
     padding: 24px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
   }
-  .view { display: none; }
-  .view.active { display: block; }
+  .view { display: none; flex: 1; min-height: 0; flex-direction: column; }
+  .view.active { display: flex; }
   .card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 20px;
     margin-bottom: 20px;
+    flex-shrink: 0;
+  }
+  .card.fill-card {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
   }
   .card h2 {
     margin-top: 0;
@@ -114,19 +136,37 @@
   }
   .student-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 12px;
+    grid-template-columns: 1fr;
+    grid-auto-rows: 1fr;
+    gap: 8px;
   }
+  .card.fill-card .student-grid {
+    flex: 1;
+    min-height: 0;
+    grid-auto-rows: 1fr;
+    overflow-y: auto;
+  }
+  #kiosk-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-flow: column;
+  }
+  .student-grid .empty { grid-column: 1 / -1; }
   .student-btn {
-    padding: 16px 10px;
-    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(2px, 1vh, 16px) 8px;
+    border-radius: 10px;
     border: 2px solid var(--border);
     background: white;
     cursor: pointer;
-    font-size: 15px;
+    font-size: clamp(11px, 2.6vw, 28px);
     font-weight: 600;
     text-align: center;
     transition: all 0.15s;
+    overflow: hidden;
+    line-height: 1.15;
   }
   .student-btn:hover { border-color: var(--blue); }
   .student-btn.out {
@@ -134,10 +174,10 @@
     border-color: var(--blue-dark);
     color: white;
   }
-  .student-btn.out .sub { display: block; font-size: 11px; font-weight: 500; margin-top: 4px; color: white; }
+  .student-btn.out .sub { display: block; font-size: clamp(8px, 1.2vw, 15px); font-weight: 500; margin-top: 2px; color: white; }
   .student-btn .sub { display: none; }
   .student-btn.out .big-timer {
-    display: block; font-size: 22px; font-weight: 800; margin-top: 6px;
+    display: block; font-size: clamp(12px, 3.2vw, 40px); font-weight: 800; margin-top: 2px;
     font-variant-numeric: tabular-nums; color: white;
   }
   .student-btn.out.late { background: var(--red); border-color: #991b1b; color: white; }
@@ -268,22 +308,28 @@
     <button data-view="dashboard" class="staff-only">Teacher Dashboard</button>
     <button data-view="settings" class="staff-only">Settings</button>
   </nav>
-  <button id="staff-toggle" type="button">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-    <span id="staff-toggle-label">Staff</span>
-  </button>
+  <div class="header-actions">
+    <button id="fullscreen-toggle" class="header-btn" type="button">
+      <svg id="fullscreen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+      <span id="fullscreen-label">Full Screen</span>
+    </button>
+    <button id="staff-toggle" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      <span id="staff-toggle-label">Staff</span>
+    </button>
+  </div>
 </header>
 
 <main>
 
   <!-- KIOSK VIEW -->
   <div id="view-kiosk" class="view active">
-    <div class="card" id="period-select-card">
+    <div class="card fill-card" id="period-select-card">
       <h2>Select your class period</h2>
       <div id="period-grid" class="student-grid"></div>
     </div>
-    <div class="card" id="roster-card" style="display:none;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+    <div class="card fill-card" id="roster-card" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px;flex-shrink:0;">
         <h2 style="margin:0;" id="roster-period-label">Tap your name</h2>
         <button class="btn secondary" id="change-period-btn">Change period</button>
       </div>
@@ -561,6 +607,36 @@
     }
   });
 
+  // ---------- Fullscreen ----------
+  function isFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  }
+
+  function updateFullscreenLabel() {
+    document.getElementById('fullscreen-label').textContent = isFullscreen() ? 'Exit Full Screen' : 'Full Screen';
+  }
+
+  document.getElementById('fullscreen-toggle').addEventListener('click', () => {
+    if (!isFullscreen()) {
+      const el = document.documentElement;
+      const request = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+      if (request) {
+        request.call(el).catch(() => {
+          showToast('This browser blocked full screen. On iPad, try Share > Add to Home Screen instead.');
+        });
+      } else {
+        showToast('Full screen isn\'t supported here. On iPad, try Share > Add to Home Screen instead.');
+      }
+    } else {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+      if (exit) exit.call(document);
+    }
+  });
+
+  ['fullscreenchange', 'webkitfullscreenchange', 'msfullscreenchange'].forEach(evt => {
+    document.addEventListener(evt, updateFullscreenLabel);
+  });
+
   // ---------- Kiosk ----------
   let pendingSignOutStudent = null;
   let selectedDestination = null;
@@ -639,6 +715,8 @@
       grid.innerHTML = '<div class="empty">No students assigned to this period yet.</div>';
       return;
     }
+    const rows = Math.ceil(periodStudents.length / 2);
+    grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
     periodStudents.forEach(s => {
       const pass = activePassFor(s.id);
       const btn = document.createElement('button');
