@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CYMS Hall Pass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&family=Bebas+Neue&family=Fredoka:wght@600&family=Oswald:wght@600&family=Playfair+Display:wght@700&family=Baloo+2:wght@700&display=swap" rel="stylesheet">
 <style>
   :root {
     --blue: #3457d5;
@@ -31,30 +34,46 @@
     overflow: hidden;
   }
   header {
-    background: var(--blue);
+    position: relative;
+    background-color: var(--blue);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     color: white;
-    padding: 26px 24px;
+    padding: 40px 28px;
+    min-height: 150px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 16px;
     flex: 0 0 auto;
+    overflow: hidden;
+  }
+  header.has-banner::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(15,23,42,0.4);
+    z-index: 0;
   }
   header h1 {
+    position: relative;
+    z-index: 1;
     margin: 0;
-    font-size: 24px;
+    font-size: 26px;
     font-weight: 800;
     letter-spacing: 0.02em;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     text-transform: uppercase;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
   }
   .logo-wrap { display: flex; align-items: center; flex-shrink: 0; }
   .cyclone-mark {
-    width: 46px;
-    height: 46px;
+    width: 50px;
+    height: 50px;
     flex-shrink: 0;
   }
   img.cyclone-mark {
@@ -103,7 +122,7 @@
   }
   .header-btn:hover, #staff-toggle:hover { background: rgba(255,255,255,0.2); }
   .header-btn svg, #staff-toggle svg { width: 14px; height: 14px; }
-  .header-actions { display: flex; align-items: center; gap: 8px; }
+  .header-actions { position: relative; z-index: 1; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
   main {
     flex: 1 1 auto;
     min-height: 0;
@@ -287,6 +306,10 @@
     padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
     font-size: 14px; width: 100%;
   }
+  input[type=color] {
+    padding: 2px; height: 38px; border-radius: 8px; border: 1px solid var(--border);
+    cursor: pointer; background: white;
+  }
   .inline-form { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .inline-form > * { flex: 1; min-width: 120px; }
   .empty { color: var(--text-light); font-size: 13px; padding: 12px 0; }
@@ -300,9 +323,9 @@
 </head>
 <body>
 
-<header>
+<header id="app-header">
   <h1>
-    <span class="logo-wrap">
+    <span class="logo-wrap" id="logo-wrap">
       <svg id="default-logo" class="cyclone-mark" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M8,14 Q30,4 50,14 Q70,24 92,14" stroke="white" stroke-width="8" stroke-linecap="round"/>
         <path d="M18,30 Q35,22 50,30 Q65,38 82,30" stroke="white" stroke-width="7" stroke-linecap="round"/>
@@ -310,16 +333,15 @@
         <path d="M36,62 Q44,58 50,62 Q56,66 64,62" stroke="white" stroke-width="5" stroke-linecap="round"/>
         <path d="M42,78 Q46,76 50,78 Q54,80 58,78" stroke="white" stroke-width="4" stroke-linecap="round"/>
       </svg>
-      <img id="custom-logo-img" class="cyclone-mark" style="display:none;" alt="School logo">
     </span>
-    CYMS Hall Pass
+    <span id="app-title-text">CYMS Hall Pass</span>
   </h1>
-  <nav>
-    <button data-view="kiosk" class="active">Kiosk</button>
-    <button data-view="dashboard" class="staff-only">Teacher Dashboard</button>
-    <button data-view="settings" class="staff-only">Settings</button>
-  </nav>
   <div class="header-actions">
+    <nav>
+      <button data-view="kiosk" class="active">Kiosk</button>
+      <button data-view="dashboard" class="staff-only">Teacher Dashboard</button>
+      <button data-view="settings" class="staff-only">Settings</button>
+    </nav>
     <button id="fullscreen-toggle" class="header-btn" type="button">
       <svg id="fullscreen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
       <span id="fullscreen-label">Full Screen</span>
@@ -389,12 +411,37 @@
       </div>
 
       <div class="settings-section">
-        <h3>Banner logo</h3>
-        <p style="font-size:13px;color:var(--text-light);margin-top:-6px;">Upload your own school logo to replace the default mark in the header.</p>
-        <div id="logo-preview" style="margin-bottom:10px;"></div>
+        <h3>App name</h3>
+        <p style="font-size:13px;color:var(--text-light);margin-top:-6px;">Shown in the banner. Change this if another school is using this app, or hide it if your banner image already has your school name on it.</p>
+        <label style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px;">
+          <input type="checkbox" id="show-title-toggle" style="width:18px;height:18px;">
+          Show app name text on banner
+        </label>
         <div class="inline-form">
-          <input type="file" id="logo-upload-input" accept="image/*">
-          <button class="btn secondary" id="remove-logo-btn">Use default logo</button>
+          <input type="text" id="app-title-input" placeholder="e.g. CYMS Hall Pass">
+          <select id="app-title-font"></select>
+          <button class="btn" id="save-title">Save</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Banner image</h3>
+        <p style="font-size:13px;color:var(--text-light);margin-top:-6px;">Upload a wide photo or graphic (like a Google Classroom or Facebook cover photo) to use as the entire top banner. It will stretch to fill the strip, so a wide image works best.</p>
+        <div id="banner-preview" style="margin-bottom:10px;"></div>
+        <div class="inline-form">
+          <input type="file" id="banner-upload-input" accept="image/*">
+          <button class="btn secondary" id="remove-banner-btn">Use default blue banner</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Theme color</h3>
+        <p style="font-size:13px;color:var(--text-light);margin-top:-6px;">Changes the color used for buttons, the banner (when no image is set), and other accents throughout the app.</p>
+        <div class="inline-form">
+          <input type="color" id="theme-color-input" value="#3457d5" style="flex:0 0 60px;min-width:60px;">
+          <button class="btn" id="save-theme-color">Save color</button>
+          <button class="btn secondary" id="match-banner-color-btn">Match banner image</button>
+          <button class="btn secondary" id="reset-theme-color">Reset to default blue</button>
         </div>
       </div>
 
@@ -477,7 +524,11 @@
     staffPin: '1234',
     requireStudentPin: true,
     autoSchedule: true,
-    customLogo: null,
+    appTitle: 'CYMS Hall Pass',
+    showAppTitle: true,
+    appTitleFont: 'default',
+    bannerImage: null,
+    themeColor: '#3457d5',
     periods: [
       { id: 'per1', name: 'Period 1', startTime: '08:00' },
       { id: 'per2', name: 'Period 2', startTime: '08:50' },
@@ -519,6 +570,16 @@
   let state = loadState();
 
   const DESTINATIONS = ['Bathroom', 'Nurse', 'Office', 'Locker', 'Water Fountain', 'Other'];
+
+  const TITLE_FONTS = {
+    default: { label: 'Default', css: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" },
+    poppins: { label: 'Poppins (Modern)', css: "'Poppins', sans-serif" },
+    bebas: { label: 'Bebas Neue (Bold & Condensed)', css: "'Bebas Neue', sans-serif" },
+    fredoka: { label: 'Fredoka (Friendly & Rounded)', css: "'Fredoka', sans-serif" },
+    baloo: { label: 'Baloo (Playful & Rounded)', css: "'Baloo 2', sans-serif" },
+    oswald: { label: 'Oswald (Classic & Sporty)', css: "'Oswald', sans-serif" },
+    playfair: { label: 'Playfair Display (Elegant Serif)', css: "'Playfair Display', serif" }
+  };
 
   // ---------- Utility ----------
   function studentName(id) {
@@ -570,30 +631,108 @@
     setTimeout(() => t.classList.remove('show'), 2200);
   }
 
-  // ---------- Banner logo ----------
-  function applyLogo() {
-    const defaultLogo = document.getElementById('default-logo');
-    const customImg = document.getElementById('custom-logo-img');
-    if (state.customLogo) {
-      customImg.src = state.customLogo;
-      customImg.style.display = 'block';
-      defaultLogo.style.display = 'none';
+  // ---------- Theme color ----------
+  function hexToRgb(hex) {
+    hex = (hex || '#3457d5').replace('#', '');
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    const num = parseInt(hex, 16);
+    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+  }
+  function rgbToHex(r, g, b) {
+    return '#' + [r, g, b].map(x => Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2, '0')).join('');
+  }
+  function shadeColor(hex, percent) {
+    const { r, g, b } = hexToRgb(hex);
+    const t = percent < 0 ? 0 : 255;
+    const p = Math.abs(percent) / 100;
+    return rgbToHex((t - r) * p + r, (t - g) * p + g, (t - b) * p + b);
+  }
+  function applyTheme() {
+    const base = state.themeColor || '#3457d5';
+    document.documentElement.style.setProperty('--blue', base);
+    document.documentElement.style.setProperty('--blue-dark', shadeColor(base, -25));
+  }
+  function getAverageColorFromImage(dataUrl, callback) {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const size = 40;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, size, size);
+        const data = ctx.getImageData(0, 0, size, size).data;
+        let r = 0, g = 0, b = 0, count = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i]; g += data[i + 1]; b += data[i + 2]; count++;
+        }
+        callback(rgbToHex(r / count, g / count, b / count));
+      } catch (err) {
+        callback(null);
+      }
+    };
+    img.onerror = () => callback(null);
+    img.src = dataUrl;
+  }
+
+  document.getElementById('save-theme-color').addEventListener('click', () => {
+    state.themeColor = document.getElementById('theme-color-input').value;
+    saveState();
+    applyTheme();
+    showToast('Theme color updated.');
+  });
+
+  document.getElementById('match-banner-color-btn').addEventListener('click', () => {
+    if (!state.bannerImage) { showToast('Upload a banner image first.'); return; }
+    getAverageColorFromImage(state.bannerImage, (hex) => {
+      if (!hex) { showToast('Could not read colors from that image.'); return; }
+      state.themeColor = hex;
+      saveState();
+      applyTheme();
+      document.getElementById('theme-color-input').value = hex;
+      showToast('Theme color matched to your banner.');
+    });
+  });
+
+  document.getElementById('reset-theme-color').addEventListener('click', () => {
+    state.themeColor = '#3457d5';
+    saveState();
+    applyTheme();
+    document.getElementById('theme-color-input').value = '#3457d5';
+    showToast('Theme color reset to default blue.');
+  });
+
+  // ---------- Banner ----------
+  function applyBanner() {
+    const header = document.getElementById('app-header');
+    const logoWrap = document.getElementById('logo-wrap');
+    const titleEl = document.getElementById('app-title-text');
+    titleEl.textContent = state.appTitle || 'CYMS Hall Pass';
+    titleEl.style.display = state.showAppTitle === false ? 'none' : '';
+    titleEl.style.fontFamily = (TITLE_FONTS[state.appTitleFont] || TITLE_FONTS.default).css;
+    document.title = state.appTitle || 'CYMS Hall Pass';
+    if (state.bannerImage) {
+      header.style.backgroundImage = `url(${state.bannerImage})`;
+      header.classList.add('has-banner');
+      logoWrap.style.display = 'none';
     } else {
-      customImg.style.display = 'none';
-      defaultLogo.style.display = '';
+      header.style.backgroundImage = '';
+      header.classList.remove('has-banner');
+      logoWrap.style.display = '';
     }
   }
 
-  document.getElementById('logo-upload-input').addEventListener('change', (e) => {
+  document.getElementById('banner-upload-input').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) { showToast('Please choose an image file.'); e.target.value = ''; return; }
-    if (file.size > 2 * 1024 * 1024) { showToast('Please choose an image under 2MB.'); e.target.value = ''; return; }
+    if (file.size > 4 * 1024 * 1024) { showToast('Please choose an image under 4MB.'); e.target.value = ''; return; }
     const reader = new FileReader();
     reader.onload = (evt) => {
-      state.customLogo = evt.target.result;
+      state.bannerImage = evt.target.result;
       saveState();
-      applyLogo();
+      applyBanner();
       renderSettings();
       showToast('Banner image updated.');
     };
@@ -601,12 +740,27 @@
     e.target.value = '';
   });
 
-  document.getElementById('remove-logo-btn').addEventListener('click', () => {
-    state.customLogo = null;
+  document.getElementById('remove-banner-btn').addEventListener('click', () => {
+    state.bannerImage = null;
     saveState();
-    applyLogo();
+    applyBanner();
     renderSettings();
-    showToast('Reverted to the default logo.');
+    showToast('Reverted to the default blue banner.');
+  });
+
+  document.getElementById('save-title').addEventListener('click', () => {
+    const val = document.getElementById('app-title-input').value.trim();
+    state.appTitle = val || 'CYMS Hall Pass';
+    state.appTitleFont = document.getElementById('app-title-font').value;
+    saveState();
+    applyBanner();
+    showToast('App name updated.');
+  });
+
+  document.getElementById('show-title-toggle').addEventListener('change', (e) => {
+    state.showAppTitle = e.target.checked;
+    saveState();
+    applyBanner();
   });
 
   // ---------- Navigation ----------
@@ -1018,10 +1172,19 @@
     document.getElementById('require-pin-toggle').checked = state.requireStudentPin;
     document.getElementById('auto-schedule-toggle').checked = state.autoSchedule;
 
-    const logoPreview = document.getElementById('logo-preview');
-    logoPreview.innerHTML = state.customLogo
-      ? `<img src="${state.customLogo}" style="height:44px;border-radius:8px;background:white;padding:4px;border:1px solid var(--border);">`
-      : `<span style="font-size:13px;color:var(--text-light);">Using the default cyclone logo.</span>`;
+    document.getElementById('theme-color-input').value = state.themeColor || '#3457d5';
+    document.getElementById('app-title-input').value = state.appTitle || 'CYMS Hall Pass';
+    document.getElementById('show-title-toggle').checked = state.showAppTitle !== false;
+    const fontSelect = document.getElementById('app-title-font');
+    if (!fontSelect.options.length) {
+      fontSelect.innerHTML = Object.entries(TITLE_FONTS).map(([key, f]) => `<option value="${key}">${f.label}</option>`).join('');
+    }
+    fontSelect.value = state.appTitleFont || 'default';
+
+    const bannerPreview = document.getElementById('banner-preview');
+    bannerPreview.innerHTML = state.bannerImage
+      ? `<img src="${state.bannerImage}" style="width:100%;max-width:360px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">`
+      : `<span style="font-size:13px;color:var(--text-light);">Using the default blue banner.</span>`;
 
     const periodsList = document.getElementById('periods-list');
     periodsList.innerHTML = '';
@@ -1165,7 +1328,8 @@
         currentPeriodId = null;
         document.getElementById('roster-card').style.display = 'none';
         document.getElementById('period-select-card').style.display = 'block';
-        applyLogo();
+        applyTheme();
+        applyBanner();
         renderPeriodGrid();
         renderDashboard();
         renderSettings();
@@ -1252,7 +1416,8 @@
   });
 
   // ---------- Init ----------
-  applyLogo();
+  applyTheme();
+  applyBanner();
   renderPeriodGrid();
   renderDashboard();
   renderSettings();
