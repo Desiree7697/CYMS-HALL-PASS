@@ -33,7 +33,7 @@
   header {
     background: var(--blue);
     color: white;
-    padding: 16px 24px;
+    padding: 26px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -43,18 +43,25 @@
   }
   header h1 {
     margin: 0;
-    font-size: 21px;
+    font-size: 24px;
     font-weight: 800;
     letter-spacing: 0.02em;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     text-transform: uppercase;
   }
+  .logo-wrap { display: flex; align-items: center; flex-shrink: 0; }
   .cyclone-mark {
-    width: 34px;
-    height: 34px;
+    width: 46px;
+    height: 46px;
     flex-shrink: 0;
+  }
+  img.cyclone-mark {
+    object-fit: contain;
+    background: white;
+    border-radius: 8px;
+    padding: 3px;
   }
   nav {
     display: flex;
@@ -295,13 +302,16 @@
 
 <header>
   <h1>
-    <svg class="cyclone-mark" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M8,14 Q30,4 50,14 Q70,24 92,14" stroke="white" stroke-width="8" stroke-linecap="round"/>
-      <path d="M18,30 Q35,22 50,30 Q65,38 82,30" stroke="white" stroke-width="7" stroke-linecap="round"/>
-      <path d="M28,46 Q40,40 50,46 Q60,52 72,46" stroke="white" stroke-width="6" stroke-linecap="round"/>
-      <path d="M36,62 Q44,58 50,62 Q56,66 64,62" stroke="white" stroke-width="5" stroke-linecap="round"/>
-      <path d="M42,78 Q46,76 50,78 Q54,80 58,78" stroke="white" stroke-width="4" stroke-linecap="round"/>
-    </svg>
+    <span class="logo-wrap">
+      <svg id="default-logo" class="cyclone-mark" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8,14 Q30,4 50,14 Q70,24 92,14" stroke="white" stroke-width="8" stroke-linecap="round"/>
+        <path d="M18,30 Q35,22 50,30 Q65,38 82,30" stroke="white" stroke-width="7" stroke-linecap="round"/>
+        <path d="M28,46 Q40,40 50,46 Q60,52 72,46" stroke="white" stroke-width="6" stroke-linecap="round"/>
+        <path d="M36,62 Q44,58 50,62 Q56,66 64,62" stroke="white" stroke-width="5" stroke-linecap="round"/>
+        <path d="M42,78 Q46,76 50,78 Q54,80 58,78" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      <img id="custom-logo-img" class="cyclone-mark" style="display:none;" alt="School logo">
+    </span>
     CYMS Hall Pass
   </h1>
   <nav>
@@ -368,6 +378,26 @@
   <!-- SETTINGS VIEW -->
   <div id="view-settings" class="view">
     <div class="card">
+      <div class="settings-section">
+        <h3>Backup &amp; restore</h3>
+        <p style="font-size:13px;color:var(--text-light);margin-top:-6px;">Everything lives only in this tablet's browser. Save a backup file regularly so you don't lose your roster and pass history if browser data ever gets cleared.</p>
+        <div class="inline-form">
+          <button class="btn" id="export-backup">Save a backup</button>
+          <button class="btn secondary" id="import-backup-btn">Load a backup</button>
+          <input type="file" id="import-backup-input" accept="application/json" style="display:none;">
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Banner logo</h3>
+        <p style="font-size:13px;color:var(--text-light);margin-top:-6px;">Upload your own school logo to replace the default mark in the header.</p>
+        <div id="logo-preview" style="margin-bottom:10px;"></div>
+        <div class="inline-form">
+          <input type="file" id="logo-upload-input" accept="image/*">
+          <button class="btn secondary" id="remove-logo-btn">Use default logo</button>
+        </div>
+      </div>
+
       <div class="settings-section">
         <h3>Pass timer threshold</h3>
         <p style="font-size:13px;color:var(--text-light);margin-top:-6px;">Timer turns red after this many minutes.</p>
@@ -447,6 +477,7 @@
     staffPin: '1234',
     requireStudentPin: true,
     autoSchedule: true,
+    customLogo: null,
     periods: [
       { id: 'per1', name: 'Period 1', startTime: '08:00' },
       { id: 'per2', name: 'Period 2', startTime: '08:50' },
@@ -538,6 +569,45 @@
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2200);
   }
+
+  // ---------- Banner logo ----------
+  function applyLogo() {
+    const defaultLogo = document.getElementById('default-logo');
+    const customImg = document.getElementById('custom-logo-img');
+    if (state.customLogo) {
+      customImg.src = state.customLogo;
+      customImg.style.display = 'block';
+      defaultLogo.style.display = 'none';
+    } else {
+      customImg.style.display = 'none';
+      defaultLogo.style.display = '';
+    }
+  }
+
+  document.getElementById('logo-upload-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('Please choose an image file.'); e.target.value = ''; return; }
+    if (file.size > 2 * 1024 * 1024) { showToast('Please choose an image under 2MB.'); e.target.value = ''; return; }
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      state.customLogo = evt.target.result;
+      saveState();
+      applyLogo();
+      renderSettings();
+      showToast('Banner image updated.');
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  });
+
+  document.getElementById('remove-logo-btn').addEventListener('click', () => {
+    state.customLogo = null;
+    saveState();
+    applyLogo();
+    renderSettings();
+    showToast('Reverted to the default logo.');
+  });
 
   // ---------- Navigation ----------
   document.querySelectorAll('nav button').forEach(btn => {
@@ -948,6 +1018,11 @@
     document.getElementById('require-pin-toggle').checked = state.requireStudentPin;
     document.getElementById('auto-schedule-toggle').checked = state.autoSchedule;
 
+    const logoPreview = document.getElementById('logo-preview');
+    logoPreview.innerHTML = state.customLogo
+      ? `<img src="${state.customLogo}" style="height:44px;border-radius:8px;background:white;padding:4px;border:1px solid var(--border);">`
+      : `<span style="font-size:13px;color:var(--text-light);">Using the default cyclone logo.</span>`;
+
     const periodsList = document.getElementById('periods-list');
     periodsList.innerHTML = '';
     if (!state.periods.length) periodsList.innerHTML = '<div class="empty">No class periods yet.</div>';
@@ -1054,6 +1129,55 @@
     selB.innerHTML = state.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
   }
 
+  // ---------- Backup & restore ----------
+  document.getElementById('export-backup').addEventListener('click', () => {
+    const dataStr = JSON.stringify(state, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cyms-hall-pass-backup-${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Backup saved to your downloads.');
+  });
+
+  document.getElementById('import-backup-btn').addEventListener('click', () => {
+    document.getElementById('import-backup-input').click();
+  });
+
+  document.getElementById('import-backup-input').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const imported = JSON.parse(evt.target.result);
+        if (!imported || typeof imported !== 'object' || !Array.isArray(imported.students) || !Array.isArray(imported.periods)) {
+          showToast('That file doesn\'t look like a valid backup.');
+          return;
+        }
+        state = Object.assign({}, defaultState, imported);
+        saveState();
+        currentPeriodId = null;
+        document.getElementById('roster-card').style.display = 'none';
+        document.getElementById('period-select-card').style.display = 'block';
+        applyLogo();
+        renderPeriodGrid();
+        renderDashboard();
+        renderSettings();
+        showToast('Backup loaded.');
+      } catch (err) {
+        showToast('Could not read that file.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
   document.getElementById('save-threshold').addEventListener('click', () => {
     const val = parseInt(document.getElementById('threshold-input').value, 10);
     if (val > 0) { state.threshold = val; saveState(); showToast('Threshold updated.'); }
@@ -1128,6 +1252,7 @@
   });
 
   // ---------- Init ----------
+  applyLogo();
   renderPeriodGrid();
   renderDashboard();
   renderSettings();
